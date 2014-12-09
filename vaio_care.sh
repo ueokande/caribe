@@ -1,14 +1,3 @@
-battery_care() {
-  file='/sys/devices/platform/sony-laptop/battery_care_limiter'
-  current_value=$(<$file)
-  dialog --rangebox 'Set the maximum of the charge' \
-                     5 60 0 100 $current_value \
-         2>$tmp
-  if [ $? == 0 ]; then
-    echo `cat $tmp` >$file || exit 1
-  fi
-}
-
 on_off() {
   if [ $# -lt 2 ]; then
     echo 'off'
@@ -19,13 +8,27 @@ on_off() {
   fi
 }
 
+battery_care() {
+  file='/sys/devices/platform/sony-laptop/battery_care_limiter'
+  current_value=$(<$file)
+  dialog --radiolist 'Set the fan contolls' \
+                     0 60 0 \
+                     '50' 'Battery care (50%)' `on_off 50 "$current_value"`\
+                     '80' 'Battery care (80%)' `on_off 80 "$current_value"`\
+                     '100' 'Disable battery care' `on_off 100 "$current_value"`\
+         2>$tmp
+  if [ $? == 0 ]; then
+    echo `cat $tmp` >$file || exit 1
+  fi
+}
+
 fan_controll() {
   file='/sys/devices/platform/sony-laptop/thermal_control'
   current_value=$(<$file)
-  dialog --radiolist 'Set the maof the chargeayour value' \
+  dialog --radiolist 'Set the fan contolls' \
                      0 60 0 \
-                     'balanced' 'Balanced performance' `on_off balanced "$current_value"`\
-                     'silent' 'Silent Fan' `on_off silent "$current_value"`\
+                     'balanced' 'Balanced performance mode' `on_off balanced "$current_value"`\
+                     'silent' 'Silent fan mode' `on_off silent "$current_value"`\
                      'performance' 'High performance mode' `on_off performance "$current_value"`\
          2>$tmp
   if [ $? == 0 ]; then
@@ -53,7 +56,7 @@ mainmenu() {
   while true; do
     dialog --title 'VAIO Care' \
            --menu 'Select an item to configure' 0 60 0 \
-                  "$battery_care" 'Set the value of the battery care' \
+                  "$battery_care" 'Set the maximum of the battery charge' \
                   "$fan_controll" 'Set the fan controlls' \
                   "$kbd_backlight" 'Enable/disable the keyboard backlight' \
            2>$tmp
