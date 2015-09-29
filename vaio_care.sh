@@ -15,7 +15,7 @@ battery_care() {
                      0 60 0 \
                      '50' 'Battery care (50%)' `on_off 50 "$current_value"`\
                      '80' 'Battery care (80%)' `on_off 80 "$current_value"`\
-                     '100' 'Disable battery care' `on_off 100 "$current_value"`\
+                     '0' 'Disable battery care' `on_off 0 "$current_value"`\
          2>$tmp
   if [ $? == 0 ]; then
     echo `cat $tmp` >$file || exit 1
