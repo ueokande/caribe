@@ -1,5 +1,6 @@
 #!/bin/sh
 
+# echo 'on' if 1st argument is equal to 2nd, otherwise 'off'
 on_off() {
   if [ $# -lt 2 ]; then
     echo 'off'
