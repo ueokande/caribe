@@ -92,7 +92,7 @@ mainmenu() {
                     "$lid_resume" 'Enable/disable resume on lid open' \
              2>&1 >/dev/tty
     )
-    if [ "$?" != "0" ]; then return; fi
+    [ $? -ne 0 ] && return
     case $choice in
       "$battery_care") battery_care;;
       "$fan_controll") fan_controll;;
