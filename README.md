@@ -1,12 +1,12 @@
-VAIO Care for Linux
-===================
+Caribe
+======
 
-Configures the hardware profile for VAIO on Linux.
+Calibrate your computer
 
 Usage
 -----
 
-    sudo ./vaio_care.sh
+sudo ./calibe
 
 License
 -------
