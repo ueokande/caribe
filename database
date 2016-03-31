@@ -1,0 +1,29 @@
+title 'Battery Care'
+path '/sys/devices/platform/sony-laptop/battery_care_limiter'
+description 'Maximum of the battery charge'
+detail 'Set the maximum of the battery charge'
+options 50 'Battery care (50%)'
+options 80 'Battery care (80%)'
+options 0  'Disable battery care'
+
+title 'Fan Controll'
+path '/sys/devices/platform/sony-laptop/thermal_control'
+description 'Fan speed'
+detail 'Set the fan contolls'
+options balanced 'Balanced performance mode'
+options silent 'Silent fan mode'
+options performance 'High performance mode'
+
+title 'Keyboard Backlight'
+path '/sys/devices/platform/sony-laptop/kbd_backlight'
+description 'Keyboard backlight on dark'
+detail 'Enable/disable the keyboard backlight'
+options 0 'Disable'
+options 1 'Enable'
+
+title 'Resume on lid open'
+path '/sys/devices/platform/sony-laptop/lid_resume_S5'
+description 'Enable/disable resume on lid open'
+detail 'Set enable/disable to resume on lid open'
+options 0 Disable
+options 1 Enable

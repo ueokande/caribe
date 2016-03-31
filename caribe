@@ -1,6 +1,51 @@
-#!/bin/sh
+#!/bin/bash
 
-# echo 'on' if 1st argument is equal to 2nd, otherwise 'off'
+declare current_title
+declare current_path
+declare current_description
+declare current_detail
+declare -A current_options
+
+declare -a ca_titles
+declare -A ca_paths
+declare -A ca_descriptions
+declare -A ca_details
+declare -A ca_optionses
+
+function push_current() {
+  ca_titles+=("$current_title")
+  ca_paths["$current_title"]="$current_path"
+  ca_descriptions["$current_title"]="$current_description"
+  ca_details["$current_title"]="$current_detail"
+  ca_optionses["$current_title"]="$(declare -p current_options)"
+
+  current_title=""
+  current_options=()
+}
+
+function title() {
+  if [ -n "$current_title" ]; then
+    push_current
+  fi
+  current_title="$*"
+}
+
+function path() {
+  current_path="$*"
+}
+
+function description() {
+  current_description="$*"
+}
+
+function detail() {
+  current_detail="$*"
+}
+
+function options() {
+  current_options["$1"]="$2"
+}
+
 on_off() {
   if [ $# -lt 2 ]; then
     echo 'off'
@@ -11,96 +56,51 @@ on_off() {
   fi
 }
 
-battery_care() {
-  file='/sys/devices/platform/sony-laptop/battery_care_limiter'
-  current_value=$(cat $file)
-  choice=$(
-    dialog --radiolist \
-           'Set the fan contolls' \
-           0 60 0 \
-           '50' 'Battery care (50%)' "$(on_off 50 "$current_value")"\
-           '80' 'Battery care (80%)' "$(on_off 80 "$current_value")"\
-           '0' 'Disable battery care' "$(on_off 0 "$current_value")"\
-           2>&1 >/dev/tty
-  )
+submenu() {
+  local title="$1"
+  local path="${ca_paths[$title]}"
+  local detail="${ca_details[$title]}"
+  eval "${ca_optionses[$title]}"
+
+  current_value=$(cat "$path")
+
+  declare -a dialog_params=()
+  dialog_params+=(--title "$title")
+  dialog_params+=(--radiolist "$detail")
+  dialog_params+=(0 60 0)
+  for key in "${!current_options[@]}"; do
+    dialog_params+=("$key" "${current_options[$key]}" "$(on_off 50 \
+                    "$current_value")")
+  done
+  choice=$(dialog "${dialog_params[@]}" 2>&1 >/dev/tty)
   if [ $? -eq 0 ]; then
-    echo "$choice" >$file || exit 1
+    echo "$choice" >"$path" || exit 1
   fi
 }
 
-fan_controll() {
-  file='/sys/devices/platform/sony-laptop/thermal_control'
-  current_value=$(cat $file)
-  choice=$(
-    dialog --radiolist \
-           'Set the fan contolls' \
-           0 60 0 \
-           'balanced' 'Balanced performance mode' "$(on_off balanced "$current_value")" \
-           'silent' 'Silent fan mode' "$(on_off silent "$current_value")" \
-           'performance' 'High performance mode' "$(on_off performance "$current_value")" \
-           2>&1 >/dev/tty
-  )
-  if [ $? -eq 0 ]; then
-    echo "$choice" >$file || exit 1
-  fi
-}
 
-kbd_backlight() {
-  file='/sys/devices/platform/sony-laptop/kbd_backlight'
-  current_value=$(cat<$file)
-  choice=$(
-    dialog --radiolist \
-           'Enable/disable the keyboard backlight' \
-           0 60 0 \
-           '0' 'Disable' "$(on_off 0 "$current_value")" \
-           '1' 'Enable' "$(on_off 1 "$current_value")" \
-           2>&1 >/dev/tty
-  )
-  if [ $? -eq 0 ]; then
-    echo "$choice" >$file || exit 1
-  fi
-}
-
-lid_resume() {
-  file='/sys/devices/platform/sony-laptop/lid_resume_S5'
-  current_value=$(cat $file)
-  choice=$(
-    dialog --radiolist \
-           'Enable/disable resume on lid open' \
-           0 60 0 \
-           '0' 'Disable' "$(on_off 0 "$current_value")"\
-           '1' 'Enable' "$(on_off 1 "$current_value")"\
-           2>&1 >/dev/tty
-  )
-  if [ $? -eq 0 ]; then
-    echo "$choice" >$file || exit 1
-  fi
-}
 
 mainmenu() {
-  battery_care='Battery Care'
-  fan_controll='Fan Controll'
-  kbd_backlight='Keyboard Backlight'
-  lid_resume='Resume on lid open'
+  declare -a dialog_params=()
+  dialog_params+=(--title 'VAIO Care')
+  dialog_params+=(--menu "Select an item to configure")
+  dialog_params+=(0 60 0)
+  for title in "${ca_titles[@]}"; do
+    if [ -f "${ca_paths[$title]}" ]; then
+      dialog_params+=("$title" "${ca_descriptions[$title]}")
+    fi
+  done
+      
   while true; do
-    choice=$(
-      dialog --title 'VAIO Care' \
-             --menu 'Select an item to configure' 0 60 0 \
-                    "$battery_care" 'Set the maximum of the battery charge' \
-                    "$fan_controll" 'Set the fan controlls' \
-                    "$kbd_backlight" 'Enable/disable the keyboard backlight' \
-                    "$lid_resume" 'Enable/disable resume on lid open' \
-             2>&1 >/dev/tty
-    )
+    choice=$(dialog "${dialog_params[@]}" 2>&1 >/dev/tty)
     [ $? -ne 0 ] && return
-    case $choice in
-      "$battery_care") battery_care;;
-      "$fan_controll") fan_controll;;
-      "$kbd_backlight") kbd_backlight;;
-      "$lid_resume") lid_resume;;
-    esac
+
+    submenu "$choice"
   done
 }
 
+# Load Options from Database
+source './database'
+push_current
+
 mainmenu
-clear
