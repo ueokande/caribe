@@ -1,0 +1,7 @@
+sudo: false
+language: haskell # for shellcheck
+install:
+- cabal install shellcheck
+script:
+# Ignore SC1091: Not following
+- shellcheck caribe -e SC1091
