@@ -1,5 +1,8 @@
 sudo: false
 language: haskell # for shellcheck
+cache:
+  directories:
+  - $HOME/.cabal/packages
 install:
 - cabal install shellcheck
 script:
